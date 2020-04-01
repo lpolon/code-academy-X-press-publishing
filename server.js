@@ -9,7 +9,6 @@ const errorHandler = require('errorhandler');
 // global middleware setup
 app.use(bodyParser.json());
 app.use(cors());
-app.use(errorHandler());
 app.use(morgan('dev'));
 
 
@@ -18,6 +17,8 @@ app.use('/api', apiRouter)
 
 
 const PORT = process.env.PORT || 4000;
+
+app.use(errorHandler());
 
 app.listen(PORT, () => {
   console.log(`server listening at ${PORT}...`);
