@@ -11,7 +11,7 @@ artistsRouter.get('/', (req, res, next) => {
   db.all(
     'SELECT * FROM Artist WHERE is_currently_employed = 1',
     (err, rows) => {
-      if (err) next();
+      if (err) next(err);
 
       res.status(200).json({ artists: rows });
     }
@@ -20,7 +20,7 @@ artistsRouter.get('/', (req, res, next) => {
 
 artistsRouter.param('artistId', (req, res, next, param) => {
   db.get(`SELECT id FROM Artist WHERE id = ${param}`, (err, row) => {
-    if(err) next();
+    if(err) next(err);
     req.artistId = row.id;
   })
 })
