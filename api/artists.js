@@ -87,4 +87,20 @@ artistsRouter.put('/:artistId', (req, res, next) => {
   );
 });
 
+artistsRouter.delete('/:artistId', (req, res, next) => {
+  const id = req.params.artistId;
+  db.run(`
+  UPDATE Artist
+  SET is_currently_employed = 0
+  WHERE id = $artistId`, {
+    $artistId: id,
+  }, (err) => {
+    if(err) return next(err)
+    db.get(`SELECT * FROM Artist WHERE id = ${id}`, (err, row) => {
+      if (err) return next(err)
+      res.status(200).json({artist: row})
+    })
+  })
+})
+
 module.exports = artistsRouter;
