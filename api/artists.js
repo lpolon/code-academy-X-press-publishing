@@ -18,14 +18,15 @@ artistsRouter.get('/', (req, res, next) => {
 });
 
 artistsRouter.post('/', (req, res, next) => {
-  const {artist: {name, dateOfBirth, biography}} = req.body
-  
-  if (!name || !dateOfBirth || !biography) {
-    return res.sendStatus(400);
-  }
+  const {
+    artist: { name, dateOfBirth, biography },
+  } = req.body;
+
+  if (!name || !dateOfBirth || !biography) return res.sendStatus(400);
   const isCurrentlyEmployed = req.body.artist.isCurrentlyEmployed === 0 ? 0 : 1;
   db.run(
-    `INSERT INTO Artist (name, date_of_birth, biography, is_currently_employed) VALUES ($name, $dateOfBirth, $biography, $isCurrentlyEmployed)`, {
+    `INSERT INTO Artist (name, date_of_birth, biography, is_currently_employed) VALUES ($name, $dateOfBirth, $biography, $isCurrentlyEmployed)`,
+    {
       $name: name,
       $dateOfBirth: dateOfBirth,
       $biography: biography,
@@ -33,7 +34,7 @@ artistsRouter.post('/', (req, res, next) => {
     },
     function(err) {
       db.get(`SELECT * FROM Artist WHERE id = ${this.lastID}`, (err, row) => {
-        if (err) return next(err)
+        if (err) return next(err);
         res.status(201).json({ artist: row });
       });
     }
@@ -50,7 +51,40 @@ artistsRouter.param('artistId', (req, res, next, param) => {
 });
 
 artistsRouter.get('/:artistId', (req, res, next) => {
-  res.status(200).json({ artist: req.artist });
+  const { artist } = req;
+  res.status(200).json({ artist });
+});
+
+artistsRouter.put('/:artistId', (req, res, next) => {
+  const {
+    artist: { name, dateOfBirth, biography },
+  } = req.body;
+  const id = req.params.artistId;
+  if (!name || !dateOfBirth || !biography) return res.sendStatus(400);
+  const isCurrentlyEmployed = req.body.artist.isCurrentlyEmployed === 0 ? 0 : 1;
+  db.run(
+    `
+  UPDATE Artist
+  SET name = $name,
+  date_of_birth = $dateOfBirth,
+  biography = $biography,
+  is_currently_employed = $isCurrentlyEmployed
+  WHERE id = $artistId
+  `,
+    {
+      $name: name,
+      $dateOfBirth: dateOfBirth,
+      $biography: biography,
+      $isCurrentlyEmployed: isCurrentlyEmployed,
+      $artistId: id,
+    },
+    function(err) {
+      db.get(`SELECT * FROM Artist WHERE id = ${id}`, (err, row) => {
+        if (err) return next(err);
+        res.status(200).json({ artist: row });
+      });
+    }
+  );
 });
 
 module.exports = artistsRouter;
