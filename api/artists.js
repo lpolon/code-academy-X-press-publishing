@@ -4,7 +4,7 @@ const artistsRouter = express.Router();
 const sqlite3 = require('sqlite3');
 // it allows test suit to check routes without corrupting database
 const db = new sqlite3.Database(
-  process.env.TEST_DATABASE || '../database.sqlite'
+  process.env.TEST_DATABASE || './database.sqlite'
 );
 
 artistsRouter.get('/', (req, res, next) => {
