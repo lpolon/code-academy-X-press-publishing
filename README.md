@@ -31,7 +31,7 @@ escrevi isso aqui:
 
 ```javascript
   artistsRouter.param('artistId', (req, res, next, param) => {
-  db.get(`SELECT id FROM Artist WHERE id = ${param}`, (err, row) => {
+  db.get(`SELECT * FROM Artist WHERE id = ${param}`, (err, row) => {
     if(err) next();
     req.artistId = row.id;
   })
@@ -41,7 +41,7 @@ escrevi isso aqui:
 O gabarito sugere diferente:
 ```javascript
   artistsRouter.param('artistId', (req, res, next, param) => {
-  db.get(`SELECT id FROM Artist.id WHERE id = $artistId`,
+  db.get(`SELECT * FROM Artist.id WHERE id = $artistId`,
   {$artistId: param},
   (err, row) => {
     if(err) next();
@@ -51,3 +51,59 @@ O gabarito sugere diferente:
 ```
 
 A minha dúvida é: Quais as diferenças de uma forma ou de outra? Tem alguma diferença? Eu aposto que não. Essa lib para usar sqlite3 com node parece um pouco antiga e parece oferecer uma alternativa anterior ao ES6 para facilitar interpolação de string. Essa é a minha aposta.
+
+## dúvida 2:
+isso gera um erro nos testes:
+```javascript
+artistsRouter.param('artistId', (req, res, next, param) => {
+  db.get(`SELECT * FROM Artist WHERE id = ${param}`, (err, row) => {
+    if (err) {
+      next(err);
+    }
+    if (!row) {
+      res.sendStatus(404);
+    }
+    req.artist = row;
+    next();
+  });
+});
+```
+
+isso, não:
+```javascript
+artistsRouter.param('artistId', (req, res, next, param) => {
+  db.get(`SELECT * FROM Artist WHERE id = ${param}`, (err, row) => {
+    if (err) {
+      next(err);
+    } else if (!row) {
+      res.sendStatus(404);
+    } else {
+      req.artist = row;
+      next();
+    }
+  });
+});
+```
+``Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client``
+
+Por quê?
+
+
+
+https://stackoverflow.com/questions/7042340/error-cant-set-headers-after-they-are-sent-to-the-client
+
+
+estava alterando a response e chamando next(), porque esqueci do return.
+
+Isso, funciona:
+
+```javascript
+artistsRouter.param('artistId', (req, res, next, param) => {
+  db.get(`SELECT * FROM Artist WHERE id = ${param}`, (err, row) => {
+    if (err) return next(err);
+    if (!row) return res.sendStatus(404);
+    req.artist = row;
+    next();
+  });
+});
+```
