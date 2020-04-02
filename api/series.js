@@ -6,6 +6,17 @@ const db = new sqlite3.Database(
   process.env.TEST_DATABASE || './database.sqlite'
 );
 
+seriesRouter.param('seriesId', (req, res, next, param) => {
+  db.get(`SELECT * FROM Series WHERE id = ${param}`, (err, row) => {
+    if (err) return next(err);
+    if (!row) return res.sendStatus(404);
+    req.series = row;
+    next();
+  });
+});
+
+seriesRouter.use('/:seriesId/issues', require('./issues'))
+
 seriesRouter.get('/', (req, res, next) => {
   db.all(`SELECT * FROM Series`, (err, rows) => {
     if (err) return next(err);
@@ -29,15 +40,6 @@ seriesRouter.post('/', (req, res, next) => {
       });
     }
   );
-});
-
-seriesRouter.param('seriesId', (req, res, next, param) => {
-  db.get(`SELECT * FROM Series WHERE id = ${param}`, (err, row) => {
-    if (err) return next(err);
-    if (!row) return res.sendStatus(404);
-    req.series = row;
-    next();
-  });
 });
 
 seriesRouter.get('/:seriesId', (req, res, next) => {
@@ -65,5 +67,6 @@ seriesRouter.put('/:seriesId', (req, res, next) => {
     }
   );
 });
+
 
 module.exports = seriesRouter;
