@@ -24,24 +24,26 @@ const isValidIssueCreateOrUpdate = (req, res, next) => {
   } = req.body;
 
   // check if it is a valid artistId
-  db.get(
-    `SELECT * FROM Artist WHERE id = $artistId`,
-    { $artistId: artistId },
-    (err, artist) => {
-      if (err) {
-        next(err);
-      } else {
-        if (!name || !issueNumber || !publicationDate || !artist)
-          return res.sendStatus(400);
+  db.serialize(() => {
+    db.get(
+      `SELECT * FROM Artist WHERE id = $artistId`,
+      { $artistId: artistId },
+      (err, artist) => {
+        if (err) {
+          next(err);
+        } else {
+          if (!name || !issueNumber || !publicationDate || !artist)
+            return res.sendStatus(400);
+        }
       }
-    }
-  );
-  next();
+    );
+    next();
+  });
 };
 
 issuesRouter.get('/', (req, res, next) => {
   db.all(
-    `SELECT * FROM Issue WHERE Issue.series_id = $seriesId`,
+    `SELECT * FROM Issue WHERE series_id = $seriesId`,
     { $seriesId: req.params.seriesId },
     (err, issues) => {
       if (err) return next(err);
@@ -55,7 +57,7 @@ issuesRouter.post('/', isValidIssueCreateOrUpdate, (req, res, next) => {
     issue: { name, issueNumber, publicationDate, artistId },
   } = req.body;
 
-  const seriesId = req.params.seriesId;
+  const { seriesId } = req.params;
 
   db.run(
     `INSERT INTO Issue (name, issue_number, publication_date, artist_id, series_id) VALUES ($name, $issueNumber, $publicationDate, $artistId, $seriesId)`,
@@ -83,7 +85,7 @@ issuesRouter.put('/:issueId', isValidIssueCreateOrUpdate, (req, res, next) => {
   const {
     issue: { name, issueNumber, publicationDate, artistId },
   } = req.body;
-  const issueId = req.params.issueId;
+  const { issueId } = req.params;
   db.run(
     `UPDATE Issue SET name = $name,
     issue_number = $issueNumber,
@@ -108,7 +110,7 @@ issuesRouter.put('/:issueId', isValidIssueCreateOrUpdate, (req, res, next) => {
 });
 
 issuesRouter.delete('/:issueId', (req, res, next) => {
-  const issueId = req.params.issueId;
+  const { issueId } = req.params;
   db.run(
     `
     DELETE FROM Issue WHERE id = $issueId
