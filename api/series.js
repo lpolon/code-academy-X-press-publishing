@@ -68,5 +68,9 @@ seriesRouter.put('/:seriesId', (req, res, next) => {
   );
 });
 
+seriesRouter.delete('/:seriesId', (req, res, next) => {
+  
+})
+
 
 module.exports = seriesRouter;
